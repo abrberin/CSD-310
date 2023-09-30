@@ -2,6 +2,8 @@ import mysql.connector
 import re
 import os
 
+ALLOWED_DOMAINS = ["gmail.com", "outlook.com", "icloud.com", "protonmail.com"]
+
 connection = mysql.connector.connect(
     host="localhost",
     user="root",
@@ -9,10 +11,8 @@ connection = mysql.connector.connect(
     database="whatabook"
 )
 
-
 def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
-
 
 def view_books(connection):
     clear_screen()
@@ -23,7 +23,6 @@ def view_books(connection):
     print("Available Books:")
     for book in books:
         print(f"Book ID: {book[0]}, Name: {book[1]}, Author: {book[2]}, Details: {book[3]}")
-
 
 def view_store(connection):
     clear_screen()
@@ -55,12 +54,13 @@ def view_wishlist(connection, user_id):
     else:
         print("Invalid user ID. Please enter a valid user ID.")
 
-
 def add_book_to_wishlist(connection, user_id, book_id):
     cursor = connection.cursor()
 
-
-    if not user_id.isdigit() or not book_id.isdigit():
+    try:
+        user_id = int(user_id)
+        book_id = int(book_id)
+    except ValueError:
         print("Error: User ID and Book ID must be valid integers.")
         return
 
@@ -69,17 +69,26 @@ def add_book_to_wishlist(connection, user_id, book_id):
     connection.commit()
     print("Book added to your wishlist.")
 
-
 def is_valid_email(email):
+    
     pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
-    return re.match(pattern, email)
-
+    match = re.match(pattern, email)
+    
+    if match:
+        domain = email.split('@')[1]
+        if domain in ALLOWED_DOMAINS:
+            return True
+        else:
+            print("Error: This email domain is not allowed for registration.")
+            return False
+    else:
+        print("Error: Invalid email format.")
+        return False
 
 def register_user(connection, email, first_name, last_name):
     cursor = connection.cursor()
 
     if not is_valid_email(email):
-        print("Error: Invalid email format. Please use a valid email address.")
         return
 
     cursor.execute("SELECT email FROM User WHERE email = %s", (email,))
@@ -97,7 +106,6 @@ def register_user(connection, email, first_name, last_name):
         cursor.execute(query, (user_id, email, first_name, last_name))
         connection.commit()
         print(f"User registration successful. Your user ID is: {user_id}")
-
 
 while True:
     clear_screen()
