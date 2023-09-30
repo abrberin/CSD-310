@@ -1,6 +1,8 @@
 import mysql.connector
 import re
+import os
 
+# Establish database connection
 connection = mysql.connector.connect(
     host="localhost",
     user="root",
@@ -8,10 +10,11 @@ connection = mysql.connector.connect(
     database="whatabook"
 )
 
+# Function to clear the screen
 def clear_screen():
-    import os
     os.system('cls' if os.name == 'nt' else 'clear')
 
+# Function to view available books
 def view_books(connection):
     clear_screen()
     cursor = connection.cursor()
@@ -22,6 +25,7 @@ def view_books(connection):
     for book in books:
         print(f"Book ID: {book[0]}, Name: {book[1]}, Author: {book[2]}, Details: {book[3]}")
 
+# Function to view store locations
 def view_store(connection):
     clear_screen()
     cursor = connection.cursor()
@@ -32,6 +36,7 @@ def view_store(connection):
     for location in locations:
         print(f"Location Name: {location[1]}")
 
+# Function to view user's wishlist
 def view_wishlist(connection, user_id):
     clear_screen()
     cursor = connection.cursor()
@@ -52,40 +57,50 @@ def view_wishlist(connection, user_id):
     else:
         print("Invalid user ID. Please enter a valid user ID.")
 
+# Function to add a book to a user's wishlist
 def add_book_to_wishlist(connection, user_id, book_id):
     cursor = connection.cursor()
+
+    # Check if user_id and book_id are valid integers
+    if not user_id.isdigit() or not book_id.isdigit():
+        print("Error: User ID and Book ID must be valid integers.")
+        return
+
     query = "INSERT INTO Wishlist (user_id, book_id) VALUES (%s, %s)"
     cursor.execute(query, (user_id, book_id))
     connection.commit()
     print("Book added to your wishlist.")
 
+# Function to validate an email address
 def is_valid_email(email):
-    
-    pattern = r'^[a-zA-Z0-9._%+-]+@(gmail\.com|outlook\.com|icloud\.com|protonmail\.com)$'
+    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
     return re.match(pattern, email)
 
+# Function to register a user
 def register_user(connection, email, first_name, last_name):
     cursor = connection.cursor()
 
     if not is_valid_email(email):
-        print("Error: Invalid email domain. Please use a valid email address.")
+        print("Error: Invalid email format. Please use a valid email address.")
+        return
+
+    cursor.execute("SELECT email FROM User WHERE email = %s", (email,))
+    existing_email = cursor.fetchone()
+
+    if existing_email:
+        print("Error: This email is already registered. Please use a different email.")
     else:
-        cursor.execute("SELECT email FROM User WHERE email = %s", (email,))
-        existing_email = cursor.fetchone()
+        cursor.execute("SELECT COUNT(*) FROM User")
+        user_count = cursor.fetchone()[0]
 
-        if existing_email:
-            print("Error: This email is already registered. Please use a different email.")
-        else:
-            cursor.execute("SELECT COUNT(*) FROM User")
-            user_count = cursor.fetchone()[0]
+        user_id = f'{user_count + 1:02d}'
 
-            user_id = f'{user_count + 1:02d}'
+        query = "INSERT INTO User (user_id, email, first_name, last_name) VALUES (%s, %s, %s, %s)"
+        cursor.execute(query, (user_id, email, first_name, last_name))
+        connection.commit()
+        print(f"User registration successful. Your user ID is: {user_id}")
 
-            query = "INSERT INTO User (user_id, email, first_name, last_name) VALUES (%s, %s, %s, %s)"
-            cursor.execute(query, (user_id, email, first_name, last_name))
-            connection.commit()
-            print(f"User registration successful. Your user ID is: {user_id}")
-
+# Main menu loop
 while True:
     clear_screen()
     print("\nMain Menu:")
@@ -141,4 +156,5 @@ while True:
         print("Invalid choice. Please try again.")
         input("\nPress Enter to continue...")
 
+# Close the database connection when the program exits
 connection.close()
