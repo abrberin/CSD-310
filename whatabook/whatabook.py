@@ -2,7 +2,6 @@ import mysql.connector
 import re
 import os
 
-# Establish database connection
 connection = mysql.connector.connect(
     host="localhost",
     user="root",
@@ -10,11 +9,11 @@ connection = mysql.connector.connect(
     database="whatabook"
 )
 
-# Function to clear the screen
+
 def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
 
-# Function to view available books
+
 def view_books(connection):
     clear_screen()
     cursor = connection.cursor()
@@ -25,7 +24,7 @@ def view_books(connection):
     for book in books:
         print(f"Book ID: {book[0]}, Name: {book[1]}, Author: {book[2]}, Details: {book[3]}")
 
-# Function to view store locations
+
 def view_store(connection):
     clear_screen()
     cursor = connection.cursor()
@@ -36,7 +35,6 @@ def view_store(connection):
     for location in locations:
         print(f"Location Name: {location[1]}")
 
-# Function to view user's wishlist
 def view_wishlist(connection, user_id):
     clear_screen()
     cursor = connection.cursor()
@@ -57,11 +55,11 @@ def view_wishlist(connection, user_id):
     else:
         print("Invalid user ID. Please enter a valid user ID.")
 
-# Function to add a book to a user's wishlist
+
 def add_book_to_wishlist(connection, user_id, book_id):
     cursor = connection.cursor()
 
-    # Check if user_id and book_id are valid integers
+
     if not user_id.isdigit() or not book_id.isdigit():
         print("Error: User ID and Book ID must be valid integers.")
         return
@@ -71,12 +69,12 @@ def add_book_to_wishlist(connection, user_id, book_id):
     connection.commit()
     print("Book added to your wishlist.")
 
-# Function to validate an email address
+
 def is_valid_email(email):
     pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
     return re.match(pattern, email)
 
-# Function to register a user
+
 def register_user(connection, email, first_name, last_name):
     cursor = connection.cursor()
 
@@ -100,7 +98,7 @@ def register_user(connection, email, first_name, last_name):
         connection.commit()
         print(f"User registration successful. Your user ID is: {user_id}")
 
-# Main menu loop
+
 while True:
     clear_screen()
     print("\nMain Menu:")
@@ -156,5 +154,4 @@ while True:
         print("Invalid choice. Please try again.")
         input("\nPress Enter to continue...")
 
-# Close the database connection when the program exits
 connection.close()
