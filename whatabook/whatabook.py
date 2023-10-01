@@ -5,26 +5,23 @@ import configparser
 
 ALLOWED_DOMAINS = ["gmail.com", "outlook.com", "icloud.com", "protonmail.com"]
 
-config = configparser.ConfigParser()
-config.read(r"C:\Users\peter\Desktop\config.ini.txt")
+config_file_path = r"C:\Users\peter\Desktop\config.ini.txt"
 
-DB_HOST = config['database']['DB_HOST']
-DB_USER = config['database']['DB_USER']
-DB_PASSWORD = config['database']['DB_PASSWORD']
-DB_NAME = config['database']['DB_NAME']
+def read_db_config(config_file_path):
+    config = configparser.ConfigParser()
+    config.read(config_file_path)
 
-connection = mysql.connector.connect(
-    host=DB_HOST,
-    user=DB_USER,
-    password=DB_PASSWORD,
-    database=DB_NAME
-)
+    return {
+        'host': config['database']['DB_HOST'],
+        'user': config['database']['DB_USER'],
+        'password': config['database']['DB_PASSWORD'],
+        'database': config['database']['DB_NAME']
+    }
 
 def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
 
 def view_books(connection):
-    clear_screen()
     cursor = connection.cursor()
     cursor.execute("SELECT * FROM book")
     books = cursor.fetchall()
@@ -34,7 +31,6 @@ def view_books(connection):
         print(f"Book ID: {book[0]}, Name: {book[1]}, Author: {book[2]}, Details: {book[3]}")
 
 def view_store(connection):
-    clear_screen()
     cursor = connection.cursor()
     cursor.execute("SELECT * FROM store")
     locations = cursor.fetchall()
@@ -44,7 +40,6 @@ def view_store(connection):
         print(f"Location Name: {location[1]}")
 
 def view_wishlist(connection, user_id):
-    clear_screen()
     cursor = connection.cursor()
     cursor.execute("SELECT user_id FROM User WHERE user_id = %s", (user_id,))
     existing_user = cursor.fetchone()
@@ -79,7 +74,6 @@ def add_book_to_wishlist(connection, user_id, book_id):
     print("Book added to your wishlist.")
 
 def is_valid_email(email):
-    
     pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
     match = re.match(pattern, email)
     
@@ -116,59 +110,70 @@ def register_user(connection, email, first_name, last_name):
         connection.commit()
         print(f"User registration successful. Your user ID is: {user_id}")
 
-while True:
-    clear_screen()
-    print("\nMain Menu:")
-    print("1. View Books")
-    print("2. View Store")
-    print("3. My Account")
-    print("4. Register User")
-    print("5. Exit Program")
+def main():
+    db_config = read_db_config(config_file_path)
 
-    choice = input("Enter your choice: ")
+    try:
+        connection = mysql.connector.connect(**db_config)
+    except mysql.connector.Error as e:
+        print(f"Error: {e}")
+        return
 
-    if choice == "1":
-        view_books(connection)
-        input("\nPress Enter to continue...")
-    elif choice == "2":
-        view_store(connection)
-        input("\nPress Enter to continue...")
-    elif choice == "3":
+    while True:
         clear_screen()
-        print("\nMy Account:")
-        print("1. View Wishlist")
-        print("2. Add Book to Wishlist")
-        print("3. Back to Main Menu")
+        print("\nMain Menu:")
+        print("1. View Books")
+        print("2. View Store")
+        print("3. My Account")
+        print("4. Register User")
+        print("5. Exit Program")
 
-        account_choice = input("Enter your account choice: ")
+        choice = input("Enter your choice: ")
 
-        if account_choice == "1":
-            user_id = input("Enter your user ID: ")
-            view_wishlist(connection, user_id)
+        if choice == "1":
+            view_books(connection)
             input("\nPress Enter to continue...")
-        elif account_choice == "2":
-            user_id = input("Enter your user ID: ")
-            book_id = input("Enter the book ID to add to your wishlist: ")
-            add_book_to_wishlist(connection, user_id, book_id)
+        elif choice == "2":
+            view_store(connection)
             input("\nPress Enter to continue...")
-        elif account_choice == "3":
-            continue
+        elif choice == "3":
+            clear_screen()
+            print("\nMy Account:")
+            print("1. View Wishlist")
+            print("2. Add Book to Wishlist")
+            print("3. Back to Main Menu")
+
+            account_choice = input("Enter your account choice: ")
+
+            if account_choice == "1":
+                user_id = input("Enter your user ID: ")
+                view_wishlist(connection, user_id)
+                input("\nPress Enter to continue...")
+            elif account_choice == "2":
+                user_id = input("Enter your user ID: ")
+                book_id = input("Enter the book ID to add to your wishlist: ")
+                add_book_to_wishlist(connection, user_id, book_id)
+                input("\nPress Enter to continue...")
+            elif account_choice == "3":
+                continue
+            else:
+                print("Invalid account choice. Please try again.")
+                input("\nPress Enter to continue...")
+        elif choice == "4":
+            clear_screen()
+            print("\nUser Registration:")
+            email = input("Enter your email: ")
+            first_name = input("Enter your first name: ")
+            last_name = input("Enter your last name: ")
+            register_user(connection, email, first_name, last_name)
+            input("\nPress Enter to continue...")
+        elif choice == "5":
+            print("Exiting program.")
+            connection.close()
+            break
         else:
-            print("Invalid account choice. Please try again.")
+            print("Invalid choice. Please try again.")
             input("\nPress Enter to continue...")
-    elif choice == "4":
-        clear_screen()
-        print("\nUser Registration:")
-        email = input("Enter your email: ")
-        first_name = input("Enter your first name: ")
-        last_name = input("Enter your last name: ")
-        register_user(connection, email, first_name, last_name)
-        input("\nPress Enter to continue...")
-    elif choice == "5":
-        print("Exiting program.")
-        break
-    else:
-        print("Invalid choice. Please try again.")
-        input("\nPress Enter to continue...")
 
-connection.close()
+if __name__ == "__main__":
+    main()
