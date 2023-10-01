@@ -6,7 +6,7 @@ import configparser
 ALLOWED_DOMAINS = ["gmail.com", "outlook.com", "icloud.com", "protonmail.com"]
 
 config = configparser.ConfigParser()
-config.read(r"C:\Users\peter\csd\CSD-310\whatabook\config.ini.txt")
+config.read(r"C:\Users\peter\Desktop\config.ini.txt")
 
 DB_HOST = config['database']['DB_HOST']
 DB_USER = config['database']['DB_USER']
