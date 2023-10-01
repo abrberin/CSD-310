@@ -5,7 +5,6 @@ import configparser
 
 ALLOWED_DOMAINS = ["gmail.com", "outlook.com", "icloud.com", "protonmail.com"]
 
-# Read database credentials from the configuration file
 config = configparser.ConfigParser()
 config.read(r"C:\Users\peter\csd\CSD-310\whatabook\config.ini.txt")
 
@@ -172,5 +171,4 @@ while True:
         print("Invalid choice. Please try again.")
         input("\nPress Enter to continue...")
 
-# Make sure to close the database connection when done.
 connection.close()
