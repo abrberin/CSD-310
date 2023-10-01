@@ -1,14 +1,24 @@
 import mysql.connector
 import re
 import os
+import configparser
 
 ALLOWED_DOMAINS = ["gmail.com", "outlook.com", "icloud.com", "protonmail.com"]
 
+# Read database credentials from the configuration file
+config = configparser.ConfigParser()
+config.read(r"C:\Users\peter\csd\CSD-310\whatabook\config.ini.txt")
+
+DB_HOST = config['database']['DB_HOST']
+DB_USER = config['database']['DB_USER']
+DB_PASSWORD = config['database']['DB_PASSWORD']
+DB_NAME = config['database']['DB_NAME']
+
 connection = mysql.connector.connect(
-    host="localhost",
-    user="root",
-    password="root",
-    database="whatabook"
+    host=DB_HOST,
+    user=DB_USER,
+    password=DB_PASSWORD,
+    database=DB_NAME
 )
 
 def clear_screen():
@@ -162,4 +172,5 @@ while True:
         print("Invalid choice. Please try again.")
         input("\nPress Enter to continue...")
 
+# Make sure to close the database connection when done.
 connection.close()
